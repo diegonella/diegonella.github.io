@@ -6,22 +6,6 @@
     <title>TIMBRE QR</title>
     <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.10.3/dist/cdn.min.js" defer></script>
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-    <link rel="manifest" href="/manifest.json?clear=1030">
-
-    <script>
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('/service-worker.js')
-                    .then(registration => {
-                        console.log('Service Worker registrado con éxito:', registration);
-                    })
-                    .catch(error => {
-                        console.error('Error al registrar Service Worker:', error);
-                    });
-            });
-        }
-    </script>
-    
 </head>
 <body class="flex items-center justify-center h-screen bg-gray-100">
     <div x-data="telegramBot()" x-init="getLocation" class="text-center">
@@ -31,6 +15,23 @@
             class="px-8 py-4 bg-blue-500 text-white text-xl font-bold rounded-lg disabled:opacity-50 disabled:cursor-not-allowed">
             Tocar Timbre
         </button>
+        <template x-if="mediaRecorderSupported">
+            <div>
+                <button 
+                    x-bind:disabled="!locationGranted || isRecording" 
+                    @click="startRecording" 
+                    class="px-8 py-4 bg-green-500 text-white text-xl font-bold rounded-lg disabled:opacity-50 disabled:cursor-not-allowed mt-4">
+                    Grabar Mensaje
+                </button>
+                <button 
+                    x-show="isRecording" 
+                    @click="stopRecording" 
+                    class="px-8 py-4 bg-red-500 text-white text-xl font-bold rounded-lg disabled:opacity-50 disabled:cursor-not-allowed mt-4">
+                    Detener Grabación
+                </button>
+            </div>
+        </template>
+        <audio x-show="audioUrl" x-bind:src="audioUrl" controls class="mt-4"></audio>
         <p x-show="locationSent" class="mt-4 text-green-500">Notificación enviada</p>
         <p x-show="locationDenied" class="mt-4 text-red-500">Permisos de geolocalización no concedidos</p>
         <template x-if="countdown > 0">
@@ -49,6 +50,11 @@
                 locationSent: false,
                 locationDenied: false,
                 countdown: 0,
+                isRecording: false,
+                mediaRecorder: null,
+                audioChunks: [],
+                mediaRecorderSupported: false,
+                audioUrl: '',
                 getLocation() {
                     if (navigator.geolocation) {
                         navigator.geolocation.getCurrentPosition(position => {
@@ -66,6 +72,76 @@
                         this.locationGranted = false;
                         this.locationDenied = true;
                     }
+
+                    // Verificar compatibilidad de MediaRecorder
+                    this.mediaRecorderSupported = 'MediaRecorder' in window;
+                },
+                startRecording() {
+                    navigator.mediaDevices.getUserMedia({ audio: true })
+                        .then(stream => {
+                            this.mediaRecorder = new MediaRecorder(stream);
+                            this.mediaRecorder.start();
+                            this.isRecording = true;
+                            this.audioChunks = [];
+                            this.mediaRecorder.ondataavailable = event => {
+                                this.audioChunks.push(event.data);
+                            };
+                        })
+                        .catch(error => {
+                            console.error('Error al acceder al micrófono:', error);
+                        });
+                },
+                stopRecording() {
+                    this.mediaRecorder.stop();
+                    this.mediaRecorder.onstop = () => {
+                        const audioBlob = new Blob(this.audioChunks, { type: 'audio/ogg; codecs=opus' });
+                        const formData = new FormData();
+                        formData.append('chat_id', this.chatId);
+                        formData.append('voice', audioBlob);
+                        fetch(`https://api.telegram.org/bot${this.botToken}/sendVoice`, {
+                            method: 'POST',
+                            body: formData
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.ok) {
+                                this.locationSent = true;
+                                this.countdown = 20;
+                                const timer = setInterval(() => {
+                                    this.countdown--;
+                                    if (this.countdown <= 0) {
+                                        clearInterval(timer);
+                                    }
+                                }, 1000);
+                                setTimeout(() => {
+                                    this.locationSent = false;
+                                }, 20000); // 20 segundos
+
+                                this.getAudioUrl(data.result.voice.file_id);
+                            } else {
+                                console.error('Error al enviar mensaje de voz');
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Error al enviar mensaje de voz:', error);
+                        });
+                    };
+                    this.isRecording = false;
+                },
+                getAudioUrl(file_id) {
+                    fetch(`https://api.telegram.org/bot${this.botToken}/getFile?file_id=${file_id}`)
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.ok) {
+                                const filePath = data.result.file_path;
+                                this.audioUrl = `https://api.telegram.org/file/bot${this.botToken}/${filePath}`;
+                            } else {
+                                console.error('Error al obtener la URL del archivo');
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Error al obtener la URL del archivo:', error);
+                        });
                 },
                 sendLocation() {
                     if (this.locationGranted) {
