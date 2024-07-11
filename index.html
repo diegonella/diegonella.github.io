@@ -1,43 +1,20 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="es" x-data="app()">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TIMBRE QR</title>
-    <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.10.3/dist/cdn.min.js" defer></script>
+    <title>QRing</title>
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-    <script src="telegramBot.js" defer></script>
+    <link rel="manifest" href="/manifest.json">
+    <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.10.3/dist/cdn.min.js" defer></script>
+    <script src="telegramBot.js"></script>
 </head>
-<body class="flex items-center justify-center h-screen bg-gray-100">
-    <div x-data="telegramBot()" x-init="initialize" class="text-center">
-        <button 
-            x-bind:disabled="!locationGranted || locationSent" 
-            @click="sendLocation" 
-            class="px-8 py-4 bg-blue-500 text-white text-xl font-bold rounded-lg disabled:opacity-50 disabled:cursor-not-allowed">
-            Tocar Timbre
-        </button>
-        <template x-if="mediaRecorderSupported">
-            <div>
-                <button 
-                    x-bind:disabled="!locationGranted || isRecording" 
-                    @click="startRecording" 
-                    class="px-8 py-4 bg-green-500 text-white text-xl font-bold rounded-lg disabled:opacity-50 disabled:cursor-not-allowed mt-4">
-                    Grabar Mensaje
-                </button>
-                <button 
-                    x-show="isRecording" 
-                    @click="stopRecording" 
-                    class="px-8 py-4 bg-red-500 text-white text-xl font-bold rounded-lg disabled:opacity-50 disabled:cursor-not-allowed mt-4">
-                    Detener Grabación
-                </button>
-            </div>
-        </template>
-        <audio x-show="audioUrl" x-bind:src="audioUrl" controls class="mt-4"></audio>
-        <p x-show="locationSent" class="mt-4 text-green-500">Notificación enviada</p>
-        <p x-show="locationDenied" class="mt-4 text-red-500">Permisos de geolocalización no concedidos</p>
-        <template x-if="countdown > 0">
-            <p class="mt-4 text-gray-500" x-text="'Puedes presionar nuevamente en ' + countdown + ' segundos'"></p>
-        </template>
+<body class="bg-gray-100 flex items-center justify-center h-screen" x-bind:class="{ 'cursor-wait': loading }">
+    <div class="max-w-md w-full text-center">
+        <h1 class="text-3xl font-bold mb-6">QRING</h1>
+        <button @click="sendLocation" x-bind:disabled="loading" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-4 px-8 rounded-lg mb-4 w-full">Tocar Timbre</button>
+        <p x-show="countdownVisible" class="text-sm text-gray-600">Puedes presionar nuevamente en <span x-text="countdown"></span> segundos</p>
+        <p x-show="notificationSent" class="text-green-500">Notificación enviada</p>
     </div>
 </body>
 </html>
