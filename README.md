@@ -1,4 +1,4 @@
-# Timbre QR
+# QRing
 
 Este proyecto es una aplicación web que permite enviar la ubicación y grabaciones de voz a un chat de Telegram al presionar un botón. La aplicación también muestra una cuenta regresiva después de enviar la notificación, durante la cual el usuario no puede presionar el botón nuevamente.
 
@@ -32,6 +32,8 @@ Este proyecto es una aplicación web que permite enviar la ubicación y grabacio
 - `index.html`: El archivo HTML principal que incluye la estructura de la aplicación.
 - `telegramBot.js`: Archivo JavaScript que contiene la lógica para enviar la ubicación y los mensajes de voz a Telegram.
 - `service-worker.js`: Archivo para manejar la funcionalidad de PWA.
+- `manifest.json`: Archivo de configuración para la Progressive Web App (PWA).
+- `bell-192x192-opt.jpg` y `bell-512x512-opt.jpg`: Iconos utilizados en la PWA.
 
 ## Uso
 
