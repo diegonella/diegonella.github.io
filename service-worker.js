@@ -1,9 +1,11 @@
-const CACHE_NAME = 'timbre-qr-cache-v1';
+const CACHE_NAME = 'timbre-qr-cache-v2';
 const urlsToCache = [
     '/',
     '/index.html',
     '/manifest.json',
     '/service-worker.js',
+    '/bell-192x192-opt.jpg',
+    '/bell-512x512-opt.jpg'
     // Incluye aquí todos los archivos que deseas precachear
 ];
 
