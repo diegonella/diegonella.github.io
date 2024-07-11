@@ -10,9 +10,9 @@
     <script>
         $(document).ready(function() {
             $('#sendMessage').click(function() {
-                var botToken = 'YOUR_BOT_TOKEN';
-                var chatId = 'YOUR_CHAT_ID';
-                var message = 'Hola, este es un mensaje enviado desde una página web!';
+                var botToken = '7247263560:AAF6PpVlY9TbO5SpQHnzFGNu0D1HBbSPuhc';
+                var chatId = '7247263560';
+                var message = 'Puerta!';
 
                 $.ajax({
                     url: 'https://api.telegram.org/bot' + botToken + '/sendMessage',
@@ -22,7 +22,7 @@
                         text: message
                     },
                     success: function(response) {
-                        console.log('Mensaje enviado:', response);
+                        console.log('Notificacion enviada:', response);
                     },
                     error: function(error) {
                         console.log('Error al enviar mensaje:', error);
