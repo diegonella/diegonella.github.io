@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Enviar Mensaje a Telegram</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body>
+    <button id="sendMessage">Enviar Mensaje</button>
+
+    <script>
+        $(document).ready(function() {
+            $('#sendMessage').click(function() {
+                var botToken = 'YOUR_BOT_TOKEN';
+                var chatId = 'YOUR_CHAT_ID';
+                var message = 'Hola, este es un mensaje enviado desde una página web!';
+
+                $.ajax({
+                    url: 'https://api.telegram.org/bot' + botToken + '/sendMessage',
+                    method: 'POST',
+                    data: {
+                        chat_id: chatId,
+                        text: message
+                    },
+                    success: function(response) {
+                        console.log('Mensaje enviado:', response);
+                    },
+                    error: function(error) {
+                        console.log('Error al enviar mensaje:', error);
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>
