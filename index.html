@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Timbre 2024-07-08 09:20</title>
+    <title>TIMBRE QR</title>
     <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.10.3/dist/cdn.min.js" defer></script>
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
 </head>
@@ -16,7 +16,8 @@
             Tocar Timbre
         </button>
         <p x-show="locationSent" class="mt-4 text-green-500">Notificación enviada</p>
-        <p x-show="locationDenied" class="mt-4 text-red-500">Debe dar permisos de geolocación</p>
+        <p x-show="locationDenied" class="mt-4 text-red-500">Permisos de geolocalización no concedidos</p>
+        <p x-show="countdown > 0" class="mt-4 text-gray-500">Puedes presionar nuevamente en {{ countdown }} segundos</p>
     </div>
 
     <script>
@@ -24,12 +25,12 @@
             return {
                 botToken: '7247263560:AAF6PpVlY9TbO5SpQHnzFGNu0D1HBbSPuhc',
                 chatId: '-4286332749',
-                message: 'Puerta',
                 latitude: null,
                 longitude: null,
                 locationGranted: false,
                 locationSent: false,
                 locationDenied: false,
+                countdown: 0,
                 getLocation() {
                     if (navigator.geolocation) {
                         navigator.geolocation.getCurrentPosition(position => {
@@ -48,28 +49,39 @@
                         this.locationDenied = true;
                     }
                 },
-                sendMessage() {
+                sendLocation() {
                     if (this.locationGranted) {
-                        fetch(`https://api.telegram.org/bot${this.botToken}/sendMessage`, {
+                        fetch(`https://api.telegram.org/bot${this.botToken}/sendLocation`, {
                             method: 'POST',
                             headers: {
                                 'Content-Type': 'application/json'
                             },
                             body: JSON.stringify({
                                 chat_id: this.chatId,
-                                text: this.message
+                                latitude: this.latitude,
+                                longitude: this.longitude
                             })
                         })
                         .then(response => response.json())
                         .then(data => {
-                            this.locationSent = true;
-                            setTimeout(() => {
-                                this.locationSent = false;
-                            }, 20000); // 20 segundos
-                            console.log('Mensaje enviado:', data);
+                            if (data.ok) {
+                                this.locationSent = true;
+                                this.countdown = 20;
+                                const timer = setInterval(() => {
+                                    this.countdown--;
+                                    if (this.countdown <= 0) {
+                                        clearInterval(timer);
+                                    }
+                                }, 1000);
+                                setTimeout(() => {
+                                    this.locationSent = false;
+                                }, 20000); // 20 segundos
+                            } else {
+                                console.error('Error al enviar ubicación');
+                            }
                         })
                         .catch(error => {
-                            console.error('Error al enviar mensaje:', error);
+                            console.error('Error al enviar ubicación:', error);
                         });
                     } else {
                         console.error('Permisos de geolocalización no concedidos.');
