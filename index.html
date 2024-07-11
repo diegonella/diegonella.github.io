@@ -1,22 +1,109 @@
-<html lang="es" x-data="initApp()">
+<!DOCTYPE html>
+<html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QRing</title>
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
-    <title>QRing</title>
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <link rel="manifest" href="/manifest.json">
     <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.10.3/dist/cdn.min.js" defer></script>
-    <script src="telegramBot.js?ver=202407112012" defer></script>
 </head>
-<body class="bg-gray-100 flex items-center justify-center h-screen" x-bind:class="{ 'cursor-wait': loading }">
+<body class="bg-gray-100 flex items-center justify-center h-screen" x-data="initApp()">
     <div class="max-w-md w-full text-center">
         <h1 class="text-3xl font-bold mb-6">QRing</h1>
         <button @click="sendLocation" :disabled="loading" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-4 px-8 rounded-lg mb-4 w-full">Tocar Timbre</button>
         <p x-show="countdownVisible" class="text-sm text-gray-600">Puedes presionar nuevamente en <span x-text="countdown"></span> segundos</p>
         <p x-show="notificationSent" class="text-green-500">Notificación enviada</p>
+        
+        <button @click="startRecording" :disabled="recording" class="bg-red-500 hover:bg-red-600 text-white font-bold py-4 px-8 rounded-lg mb-4 w-full mt-4">Grabar Mensaje de Voz</button>
+        <p x-show="recording" class="text-sm text-gray-600">Grabando...</p>
     </div>
+
+    <script>
+        function initApp() {
+            return {
+                loading: false,
+                countdownVisible: false,
+                notificationSent: false,
+                countdown: 20,
+                recording: false,
+        
+                sendLocation() {
+                    if (navigator.geolocation) {
+                        this.loading = true;
+                        this.countdownVisible = false;
+                        this.notificationSent = false;
+        
+                        navigator.geolocation.getCurrentPosition(position => {
+                            const latitude = position.coords.latitude;
+                            const longitude = position.coords.longitude;
+        
+                            // Simulación de envío a Telegram (reemplazar con la lógica real)
+                            setTimeout(() => {
+                                this.loading = false;
+                                this.countdownVisible = true;
+                                this.startCountdown();
+                            }, 2000); // Simular una respuesta después de 2 segundos
+                        }, error => {
+                            console.error('Error obteniendo la ubicación:', error);
+                            alert('No se pudo obtener la ubicación.');
+                            this.loading = false;
+                        });
+                    } else {
+                        alert('Tu navegador no soporta geolocalización.');
+                    }
+                },
+        
+                startCountdown() {
+                    let interval = setInterval(() => {
+                        this.countdown--;
+                        if (this.countdown === 0) {
+                            clearInterval(interval);
+                            this.countdownVisible = false;
+                            this.notificationSent = true;
+                        }
+                    }, 1000); // Contar hacia abajo cada segundo
+                },
+        
+                startRecording() {
+                    this.recording = true;
+        
+                    navigator.mediaDevices.getUserMedia({ audio: true })
+                        .then(stream => {
+                            const mediaRecorder = new MediaRecorder(stream);
+                            const chunks = [];
+        
+                            mediaRecorder.ondataavailable = e => {
+                                chunks.push(e.data);
+                            };
+        
+                            mediaRecorder.onstop = () => {
+                                this.recording = false;
+        
+                                const blob = new Blob(chunks, { type: 'audio/webm' });
+                                const audioURL = URL.createObjectURL(blob);
+        
+                                // Simulación de envío a Telegram (reemplazar con la lógica real)
+                                console.log('Audio grabado:', audioURL);
+                            };
+        
+                            mediaRecorder.start();
+        
+                            setTimeout(() => {
+                                mediaRecorder.stop();
+                            }, 5000); // Grabar durante 5 segundos (ajustable)
+                        })
+                        .catch(err => {
+                            console.error('Error al acceder al micrófono:', err);
+                            alert('No se pudo acceder al micrófono.');
+                            this.recording = false;
+                        });
+                }
+            };
+        }
+    </script>
 </body>
 </html>
