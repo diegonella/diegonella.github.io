@@ -1,12 +1,20 @@
 <!DOCTYPE html>
-<html>
+<html lang="es">
 <head>
-    <title>Enviar Geolocalización a Telegram con Alpine.js</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Timbre 2024-07-08 09:04</title>
     <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.10.3/dist/cdn.min.js" defer></script>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
 </head>
-<body>
-    <div x-data="telegramBot()" x-init="getLocation">
-        <button x-bind:disabled="!locationGranted" @click="sendMessage">Tocar timbre</button>
+<body class="flex items-center justify-center h-screen bg-gray-100">
+    <div x-data="telegramBot()" x-init="getLocation" class="text-center">
+        <button 
+            x-bind:disabled="!locationGranted" 
+            @click="sendMessage" 
+            class="px-8 py-4 bg-blue-500 text-white text-xl font-bold rounded-lg disabled:opacity-50 disabled:cursor-not-allowed">
+            Tocar Timbre
+        </button>
     </div>
 
     <script>
