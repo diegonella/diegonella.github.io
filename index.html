@@ -53,6 +53,10 @@
                 },
                 sendLocation() {
                     if (this.locationGranted) {
+                        const now = new Date();
+                        const date = `${now.getFullYear()}-${('0' + (now.getMonth() + 1)).slice(-2)}-${('0' + now.getDate()).slice(-2)}`;
+                        const time = `${('0' + now.getHours()).slice(-2)}:${('0' + now.getMinutes()).slice(-2)}:${('0' + now.getSeconds()).slice(-2)}`;
+                        
                         fetch(`https://api.telegram.org/bot${this.botToken}/sendLocation`, {
                             method: 'POST',
                             headers: {
@@ -61,7 +65,8 @@
                             body: JSON.stringify({
                                 chat_id: this.chatId,
                                 latitude: this.latitude,
-                                longitude: this.longitude
+                                longitude: this.longitude,
+                                caption: `Ubicación enviada el ${date} a las ${time}`
                             })
                         })
                         .then(response => response.json())
