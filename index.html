@@ -17,7 +17,9 @@
         </button>
         <p x-show="locationSent" class="mt-4 text-green-500">Notificación enviada</p>
         <p x-show="locationDenied" class="mt-4 text-red-500">Permisos de geolocalización no concedidos</p>
-        <p x-show="countdown > 0" class="mt-4 text-gray-500">Puedes presionar nuevamente en {{ countdown }} segundos</p>
+        <template x-if="countdown > 0">
+            <p class="mt-4 text-gray-500" x-text="'Puedes presionar nuevamente en ' + countdown + ' segundos'"></p>
+        </template>
     </div>
 
     <script>
