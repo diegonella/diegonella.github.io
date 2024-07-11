@@ -1,35 +1,66 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Enviar Mensaje a Telegram</title>
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <title>Enviar Geolocalización a Telegram con Alpine.js</title>
+    <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.10.3/dist/cdn.min.js" defer></script>
 </head>
 <body>
-    <button id="sendMessage">Tocar timbre</button>
+    <div x-data="telegramBot()" x-init="getLocation">
+        <button x-bind:disabled="!locationGranted" @click="sendMessage">Tocar timbre</button>
+    </div>
 
     <script>
-        $(document).ready(function() {
-            $('#sendMessage').click(function() {
-                var botToken = '7247263560:AAF6PpVlY9TbO5SpQHnzFGNu0D1HBbSPuhc';
-                var chatId = '1212843';
-                var message = 'Puerta!';
-
-                $.ajax({
-                    url: 'https://api.telegram.org/bot' + botToken + '/sendMessage',
-                    method: 'POST',
-                    data: {
-                        chat_id: chatId,
-                        text: message
-                    },
-                    success: function(response) {
-                        console.log('Notificacion enviada:', response);
-                    },
-                    error: function(error) {
-                        console.log('Error al enviar mensaje:', error);
+        function telegramBot() {
+            return {
+                botToken: '7247263560:AAF6PpVlY9TbO5SpQHnzFGNu0D1HBbSPuhc',
+                chatId: '1212843',
+                message: 'Puerta',
+                latitude: null,
+                longitude: null,
+                locationGranted: false,
+                getLocation() {
+                    if (navigator.geolocation) {
+                        navigator.geolocation.getCurrentPosition(position => {
+                            this.latitude = position.coords.latitude;
+                            this.longitude = position.coords.longitude;
+                            this.message = `Mi ubicación actual es:\nLatitud: ${this.latitude}\nLongitud: ${this.longitude}`;
+                            this.locationGranted = true;
+                        }, error => {
+                            console.error('Error al obtener la geolocalización:', error);
+                            this.message = 'No se pudo obtener la geolocalización.';
+                            this.locationGranted = false;
+                        });
+                    } else {
+                        console.error('Geolocalización no soportada por este navegador.');
+                        this.message = 'Geolocalización no soportada por este navegador.';
+                        this.locationGranted = false;
                     }
-                });
-            });
-        });
+                },
+                sendMessage() {
+                    if (this.locationGranted) {
+                        fetch(`https://api.telegram.org/bot${this.botToken}/sendMessage`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({
+                                chat_id: this.chatId,
+                                text: this.message
+                            })
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            console.log('Mensaje enviado:', data);
+                        })
+                        .catch(error => {
+                            console.error('Error al enviar mensaje:', error);
+                        });
+                    } else {
+                        console.error('Permisos de geolocalización no concedidos.');
+                    }
+                }
+            };
+        }
     </script>
 </body>
 </html>
